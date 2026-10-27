@@ -1,0 +1,22 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const api = require('./routes/api');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
+
+const app = express();
+app.set('trust proxy', 1);
+app.use(helmet());
+const allowed = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(s => s.trim());
+app.use(cors({ origin: (origin, cb) => { if (!origin || allowed.includes(origin)) return cb(null, true); return cb(new Error('CORS: origin not allowed')); } }));
+app.use(express.json({ limit: '100kb' }));
+app.use((req, res, next) => { console.log(`[api] ${req.method} ${req.originalUrl}`); next(); });
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: true, legacyHeaders: false }));
+app.use('/api/quiz', rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false }));
+app.get('/', (req, res) => res.json({ service: 'question-rush-api', health: '/api/health' }));
+app.use('/api', api);
+app.use(notFound);
+app.use(errorHandler);
+module.exports = app;

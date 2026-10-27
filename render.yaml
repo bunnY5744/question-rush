@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: question-rush-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        sync: false # set to your Vercel URL, e.g. https://question-rush.vercel.app
+      - key: MONGODB_URI
+        sync: false # paste your MongoDB Atlas connection string in the Render dashboard only
